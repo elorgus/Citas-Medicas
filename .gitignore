@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+
+# Django
+*.sqlite3
+media/
+staticfiles/
+local_settings.py
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Entorno
+.env
+.env.local
+*.env
+
+# Logs
+*.log
+logs/
+
+# Docker
+docker-compose.override.yml
+
+# OS
+.DS_Store
+Thumbs.db
