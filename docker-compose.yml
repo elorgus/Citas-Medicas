@@ -1,0 +1,51 @@
+services:
+  app:
+    build: .
+    container_name: citas-app
+    env_file: .env
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "${APP_PORT}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - citas-net
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: citas-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - citas-net
+
+  # Opcional para desarrollo: MailHog para probar correos
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: citas-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - citas-net
+
+volumes:
+  postgres_data:
+
+networks:
+  citas-net:
+    driver: bridge
