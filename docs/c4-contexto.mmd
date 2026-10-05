@@ -1,0 +1,17 @@
+C4Context
+    title Contexto - Sistema de Citas Medicas
+
+    Person(paciente, "Paciente", "Reserva y cancela citas")
+    Person(recepcionista, "Recepcionista", "Gestiona agenda en nombre del paciente")
+    Person(medico, "Medico", "Consulta su agenda")
+
+    System(citas, "Sistema de Citas Medicas", "Gestiona disponibilidad, reservas, cancelaciones y recordatorios")
+
+    System_Ext(email, "Proveedor de email", "Envia recordatorios")
+    System_Ext(sms, "Proveedor de SMS", "Envia recordatorios por SMS")
+
+    Rel(paciente, citas, "Reserva cita", "HTTPS/JSON")
+    Rel(recepcionista, citas, "Gestiona agenda", "HTTPS/JSON")
+    Rel(medico, citas, "Consulta agenda", "HTTPS/JSON")
+    Rel(citas, email, "Envia recordatorios", "SMTP/API")
+    Rel(citas, sms, "Envia recordatorios", "REST")
