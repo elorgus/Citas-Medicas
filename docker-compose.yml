@@ -3,13 +3,12 @@ services:
     build: .
     container_name: citas-app
     env_file: .env
-    command: python manage.py runserver 0.0.0.0:8000
-    volumes:
-      - .:/app
     ports:
-      - "${APP_PORT}:8000"
+      - "${APP_PORT}:8080"
     depends_on:
       postgres:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - citas-net
@@ -33,13 +32,20 @@ services:
     networks:
       - citas-net
 
-  # Opcional para desarrollo: MailHog para probar correos
-  mailhog:
-    image: mailhog/mailhog:latest
-    container_name: citas-mailhog
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: citas-rabbit
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
     ports:
-      - "1025:1025"
-      - "8025:8025"
+      - "${RABBITMQ_PORT}:5672"
+      - "${RABBITMQ_MGMT_PORT}:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
     networks:
       - citas-net
 
