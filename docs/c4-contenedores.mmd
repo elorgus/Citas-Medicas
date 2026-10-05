@@ -1,0 +1,25 @@
+C4Container
+    title Contenedores - Sistema de Citas Medicas
+
+    Person(paciente, "Paciente")
+    Person(recepcionista, "Recepcionista")
+    Person(medico, "Medico")
+
+    Container_Boundary(b1, "Sistema de Citas") {
+        Container(api, "API REST", "Spring Boot 3.4 / Java 21", "Disponibilidad, reservas, cancelaciones")
+        ContainerDb(db, "PostgreSQL", "16", "Pacientes, medicos, citas con constraint unico")
+        ContainerQueue(mq, "RabbitMQ", "3.13", "Eventos cita.recordatorio")
+        ContainerScheduler(sched, "Scheduler", "Spring @Scheduled", "Busca citas proximas cada 5 min")
+        Container(consumer, "Consumer async", "Spring AMQP", "Envia recordatorios por email/SMS")
+        Container(web, "Frontend", "HTML/JS", "Calendario y reservas")
+    }
+
+    Rel(paciente, web, "Usa", "HTTPS")
+    Rel(recepcionista, web, "Usa", "HTTPS")
+    Rel(medico, web, "Usa", "HTTPS")
+    Rel(web, api, "Consume API", "JSON/HTTPS")
+    Rel(api, db, "JPA", "JDBC")
+    Rel(sched, db, "Busca citas proximas", "JDBC")
+    Rel(sched, mq, "Publica cita.recordatorio", "AMQP")
+    Rel(consumer, mq, "Consume cita.recordatorio", "AMQP")
+    Rel(consumer, db, "Marca recordatorio enviado", "JDBC")
