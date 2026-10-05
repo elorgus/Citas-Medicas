@@ -1,0 +1,29 @@
+sequenceDiagram
+    actor P1 as Paciente A
+    actor P2 as Paciente B
+    participant API as API REST
+    participant DB as PostgreSQL
+    participant MQ as RabbitMQ
+    participant Cons as Consumer recordatorios
+
+    Note over P1,P2: Ambos intentan reservar el mismo slot (medico X, 2026-10-10 11:00)
+
+    par Paciente A
+        P1->>API: POST /api/v1/citas (medicoId, fechaHora, pacienteId)
+    and Paciente B
+        P2->>API: POST /api/v1/citas (medicoId, fechaHora, pacienteId)
+    end
+
+    API->>DB: INSERT cita (medico_id, fecha_hora, paciente_id)
+
+    alt Paciente A gana
+        DB-->>API: OK (constraint unico acepta)
+        API->>MQ: Publicar cita.recordatorio
+        API-->>P1: 201 Created
+        DB--xAPI: Constraint UNIQUE(medico_id, fecha_hora) rechaza el segundo INSERT
+        API-->>P2: 409 Conflict (slot ocupado)
+    end
+
+    MQ-->>Cons: Entrega cita.recordatorio
+    Cons->>DB: Marcar recordatorio_enviado=true
+    Cons-->>P1: Email/SMS enviado
