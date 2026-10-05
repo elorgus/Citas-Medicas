@@ -1,18 +1,16 @@
-FROM python:3.12-slim AS base
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+# ---------- Build ----------
+FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+COPY src ./src
+RUN mvn clean package -DskipTests
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential libpq-dev && rm -rf /var/lib/apt/lists/*
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . .
-
-RUN adduser --disabled-password --gecos "" appuser && chown -R appuser /app
-USER appuser
-
-EXPOSE 8000
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000"]
+# ---------- Runtime ----------
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+RUN addgroup -S app && adduser -S app -G app
+COPY --from=build /app/target/*.jar app.jar
+USER app
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]
